@@ -1,8 +1,16 @@
+import { useState } from "react";
 import DashboardLayout from "../../Components/DashboardLayout";
 
 function SupervisorDashboard({ user, onLogout }) {
+  const [activePage, setActivePage] = useState("Dashboard");
+
   return (
-    <DashboardLayout user={user} onLogout={onLogout}>
+    <DashboardLayout 
+      user={user} 
+      onLogout={onLogout}
+      activePage={activePage}
+      setActivePage={setActivePage}
+    >
 
       {/* Page Title */}
       <h1 style={styles.title}>Supervisor Dashboard</h1>

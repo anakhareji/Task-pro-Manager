@@ -1,77 +1,69 @@
 import React, { useEffect, useState } from "react";
 
-function ManageProjects() {
+function ManageProjects({ user }) {
   const [projects, setProjects] = useState([]);
   const [projectName, setProjectName] = useState("");
-  const [editingIndex, setEditingIndex] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  /* ================= LOAD FROM STORAGE ================= */
-useEffect(() => {
-  const savedProjects = localStorage.getItem("projects");
-
-  if (savedProjects) {
-    setProjects(JSON.parse(savedProjects));
-  } else {
-    setProjects([
-      { project_name: "Final Year Project", status: "Active" },
-      { project_name: "Internship Project", status: "Active" },
-    ]);
-  }
-}, []);
-useEffect(() => {
-  localStorage.setItem("projects", JSON.stringify(projects));
-}, [projects]);
-
-  /* ================= SAVE TO STORAGE ================= */
+  /* ================= LOAD FROM BACKEND ================= */
   useEffect(() => {
-    localStorage.setItem("admin_projects", JSON.stringify(projects));
-  }, [projects]);
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/admin/projects");
+      if (response.ok) {
+        const data = await response.json();
+        setProjects(data);
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
 
   /* ================= HANDLERS ================= */
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!projectName.trim()) return;
+    setLoading(true);
 
-    setProjects([
-      ...projects,
-      { project_name: projectName, status: "Active" },
-    ]);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/admin/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          project_name: projectName,
+          created_by: user.user_id, // ✅ Sending valid user ID
+        }),
+      });
 
-    setProjectName("");
+      if (response.ok) {
+        setProjectName("");
+        fetchProjects(); // 🔄 Refresh list
+      } else {
+        alert("Failed to create project");
+      }
+    } catch (error) {
+      console.error("Error creating project:", error);
+      alert("Server error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpdate = () => {
-  if (editingIndex === null) return;
-
-  setProjects(
-    projects.map((project, index) =>
-      index === editingIndex
-        ? { ...project, project_name: projectName }
-        : project
-    )
-  );
-
-  setEditingIndex(null);
-  setProjectName("");
-};
-
-
+  // ⚠️ Update/Delete not yet implemented in backend for Projects
   const handleDelete = (index) => {
-    setProjects(projects.filter((_, i) => i !== index));
-  };
-
-  const toggleStatus = (index) => {
-    const updated = [...projects];
-    updated[index].status =
-      updated[index].status === "Active" ? "Inactive" : "Active";
-    setProjects(updated);
+     alert("Delete not waiting for backend implementation");
   };
 
   return (
     <div>
       <h2 style={styles.title}>Manage Projects</h2>
 
-      {/* ADD / UPDATE */}
+      {/* ADD */}
       <div style={styles.form}>
         <input
           type="text"
@@ -80,16 +72,9 @@ useEffect(() => {
           onChange={(e) => setProjectName(e.target.value)}
           style={styles.input}
         />
-
-        {editingIndex !== null ? (
-          <button onClick={handleUpdate} style={styles.btn}>
-            Update
-          </button>
-        ) : (
-          <button onClick={handleAdd} style={styles.btn}>
-            Add Project
-          </button>
-        )}
+        <button onClick={handleAdd} style={styles.btn} disabled={loading}>
+          {loading ? "Adding..." : "Add Project"}
+        </button>
       </div>
 
       {/* TABLE */}
@@ -98,7 +83,7 @@ useEffect(() => {
           <tr>
             <th style={styles.th}>ID</th>
             <th style={styles.th}>Project Name</th>
-            <th style={styles.th}>Status</th>
+            <th style={styles.th}>Created At</th>
             <th style={styles.th}>Actions</th>
           </tr>
         </thead>
@@ -106,44 +91,15 @@ useEffect(() => {
         <tbody>
           {projects.map((p, index) => (
             <tr key={index}>
-              <td style={styles.td}>{index + 1}</td>
+              <td style={styles.td}>{p.project_id}</td>
               <td style={styles.td}>{p.project_name}</td>
-
               <td style={styles.td}>
-                <span
-                  style={{
-                    ...styles.status,
-                    backgroundColor:
-                      p.status === "Active" ? "#DCFCE7" : "#FEE2E2",
-                    color:
-                      p.status === "Active" ? "#166534" : "#991B1B",
-                  }}
-                >
-                  {p.status}
-                </span>
+                 {p.created_at ? new Date(p.created_at).toLocaleDateString() : "N/A"}
               </td>
-
               <td style={styles.td}>
-                <button
-                  style={styles.edit}
-                  onClick={() => {
-                    setEditingIndex(index);
-                    setProjectName(p.project_name);
-                  }}
-                >
-                  Edit
-                </button>
-
-                <button
-                  style={styles.toggle}
-                  onClick={() => toggleStatus(index)}
-                >
-                  Toggle
-                </button>
-
                 <button
                   style={styles.delete}
-                  onClick={() => handleDelete(index)}
+                  onClick={() => handleDelete(p.project_id)}
                 >
                   Delete
                 </button>
