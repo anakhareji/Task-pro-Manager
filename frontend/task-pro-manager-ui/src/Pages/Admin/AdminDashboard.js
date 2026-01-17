@@ -11,7 +11,7 @@ function AdminDashboard({ user, onLogout }) {
       case "Users":
         return <ManageUsers />;
       case "Projects":
-        return <ManageProjects />;
+        return <ManageProjects user={user} />;
       default:
         return (
           <>

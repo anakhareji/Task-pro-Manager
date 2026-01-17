@@ -1,8 +1,16 @@
+import { useState } from "react";
 import DashboardLayout from "../../Components/DashboardLayout";
 
 function StudentDashboard({ user, onLogout }) {
+  const [activePage, setActivePage] = useState("Dashboard");
+
   return (
-    <DashboardLayout user={user} onLogout={onLogout}>
+    <DashboardLayout 
+      user={user} 
+      onLogout={onLogout}
+      activePage={activePage}
+      setActivePage={setActivePage}
+    >
 
       {/* Header */}
       <div style={styles.header}>
