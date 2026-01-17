@@ -1,0 +1,16 @@
+backend/venv/
+**/__pycache__/
+*.pyc
+backend/.env
+backend/debug_log.txt
+backend/dir_output.txt
+backend/python_version.txt
+
+# Frontend
+frontend/task-pro-manager-ui/node_modules/
+frontend/task-pro-manager-ui/build/
+frontend/task-pro-manager-ui/.env
+
+# System
+.DS_Store
+Thumbs.db
